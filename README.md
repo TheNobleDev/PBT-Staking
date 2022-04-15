@@ -129,4 +129,3 @@ user.amount = user.amount.sub(_amount);
 user.rewardDebt = user.amount.mul(pool.accPbtPerShare).div(1e12);
         = 25 * (5)
         = 125
-```
