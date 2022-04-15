@@ -1,12 +1,5 @@
-# PBT-Staking
+# PBT-LP-Staking
 Smart contract that rewards PBT for staking LP tokens
-
-## Deliverables:
-- ERC20 contract
-- PB LP Staking contract for ERC20 rewards
-- Uni LP Staking contract for ERC20 rewards
-- Web 3 integration scripts for the contracts
-- Detailed documentation of the contracts.
 
 ## How the core logic works (the mathematics)
 At any point in time, the amount of PBTs entitled to a user, and are pending to be distributed is:
