@@ -14,8 +14,9 @@ contract PBTStaking is Ownable {
         uint256 rewardDebt;
     }
 
-    uint256 lastRewardBlock; // Last block number that PBTs distribution occurs.
-    uint256 accPbtPerShare; // Accumulated PBTs per share, times 1e12.
+    uint256 public lastRewardBlock; // Last block number that PBT distribution occurred.
+    uint256 public endBlock; // The Last block number when PBT distribution ends.
+    uint256 accPbtPerShare; // Accumulated PBT per share, times 1e12.
 
     // The PBT TOKEN
     IERC20 public immutable pbt;
@@ -32,11 +33,12 @@ contract PBTStaking is Ownable {
     event Withdraw(address indexed user, uint256 amount);
     event EmergencyWithdraw(address indexed user, uint256 amount);
 
-    constructor(IERC20 _pbt, uint256 _pbtPerBlock, uint256 _startBlock) {
+    constructor(IERC20 _pbt, uint256 _pbtPerBlock, uint256 _startBlock, uint256 _totalRewards) {
         require(_startBlock > block.number, "StartBlock must be in the future");
         pbt = _pbt;
         pbtPerBlock = _pbtPerBlock;
         lastRewardBlock = _startBlock;
+        endBlock = _startBlock + _totalRewards/_pbtPerBlock;
     }
 
     // View function to see pending PBT rewards on frontend.
@@ -128,18 +130,26 @@ contract PBTStaking is Ownable {
 
     // Update rewards
     function _updateRewards() internal {
-        if (block.number <= lastRewardBlock) {
+        uint256 _lastRewardBlock = lastRewardBlock;
+        uint256 _endBlock = endBlock;
+        uint256 blockToUse = block.number;
+
+        if (blockToUse <= _lastRewardBlock || _lastRewardBlock >= _endBlock) {
             return;
         }
+        if(blockToUse > _endBlock) {
+            blockToUse = _endBlock;
+        }
+
         uint256 denominator = totalDeposits;
         if (denominator == 0) {
-            lastRewardBlock = block.number;
+            lastRewardBlock = blockToUse;
             return;
         }
-        uint256 pbtReward = (block.number - lastRewardBlock) * pbtPerBlock;
-        require(pbt.balanceOf(address(this)) - pbtForRewards - totalDeposits >= pbtReward, "Insufficient PBT tokens for rewards");
+        uint256 pbtReward = (blockToUse - _lastRewardBlock) * pbtPerBlock;
+        require(pbt.balanceOf(address(this)) - totalDeposits - pbtForRewards >= pbtReward, "Insufficient PBT tokens for rewards");
         pbtForRewards += pbtReward;
         accPbtPerShare += (pbtReward * 1e12 / denominator);
-        lastRewardBlock = block.number;
+        lastRewardBlock = blockToUse;
     }
 }
