@@ -52,8 +52,13 @@ contract PBTLPStaking is Ownable {
         UserInfo storage user = userInfo[_user];
         uint256 accPbtPerShare = pool.accPbtPerShare;
         uint256 lpSupply = pool.lpToken.balanceOf(address(this));
-        if (block.number > pool.lastRewardBlock && lpSupply != 0) {
-            uint256 pbtReward = (block.number - pool.lastRewardBlock) * pbtPerBlock;
+
+        uint256 blockToUse = block.number;
+        if(blockToUse > pool.endBlock) {
+            blockToUse = pool.endBlock;
+        }
+        if (blockToUse > pool.lastRewardBlock && lpSupply != 0) {
+            uint256 pbtReward = (blockToUse - pool.lastRewardBlock) * pbtPerBlock;
             accPbtPerShare = accPbtPerShare + ((pbtReward * 1e12)/lpSupply);
         }
         return ((user.amount * accPbtPerShare)/1e12) - user.rewardDebt;
@@ -66,9 +71,14 @@ contract PBTLPStaking is Ownable {
         _updatePool();
         if (user.amount > 0) {
             uint256 pending = ((user.amount * pool.accPbtPerShare)/1e12) - user.rewardDebt;
-            _safePbtTransfer(msg.sender, pending);
+            if(pending > 0) {
+                pbtForRewards -= pending;
+                _safePbtTransfer(msg.sender, pending);
+            }
         }
-        pool.lpToken.safeTransferFrom(address(msg.sender), address(this), _amount);
+        if(_amount > 0) {
+            pool.lpToken.safeTransferFrom(address(msg.sender), address(this), _amount);
+        }
         user.amount += _amount;
         user.rewardDebt = (user.amount * pool.accPbtPerShare)/1e12;
         emit Deposit(msg.sender, _amount);
@@ -81,10 +91,15 @@ contract PBTLPStaking is Ownable {
         require(user.amount >= _amount, "withdraw: not good");
         _updatePool();
         uint256 pending = ((user.amount * pool.accPbtPerShare)/1e12) - user.rewardDebt;
-        _safePbtTransfer(msg.sender, pending);
+        if(pending > 0) {
+            pbtForRewards -= pending;
+            _safePbtTransfer(msg.sender, pending);
+        }
         user.amount -= _amount;
         user.rewardDebt = (user.amount * pool.accPbtPerShare)/1e12;
-        pool.lpToken.safeTransfer(address(msg.sender), _amount);
+        if(_amount > 0) {
+            pool.lpToken.safeTransfer(address(msg.sender), _amount);
+        }
         emit Withdraw(msg.sender, _amount);
     }
 

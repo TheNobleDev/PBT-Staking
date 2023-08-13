@@ -1,4 +1,6 @@
 require("@nomiclabs/hardhat-waffle");
+// require("@nomicfoundation/hardhat-verify");
+require("@nomiclabs/hardhat-etherscan");
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -18,4 +20,13 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  */
 module.exports = {
   solidity: "0.8.4",
+  defaultNetwork: "goerli",
+  etherscan: {
+    apiKey: "KDDGUNQ7G1MUWFI95NJP8CQ1XR6W4TYN43",
+  },
+  networks: {
+    goerli: {
+      url: `https://ethereum-goerli.publicnode.com`,
+    },
+  },
 };

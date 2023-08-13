@@ -47,17 +47,16 @@ contract PBTStaking is Ownable {
 
         uint256 rewardPerShare = accPbtPerShare;
         uint256 denominator = totalDeposits;
-        if (block.number > lastRewardBlock && denominator != 0) {
-            uint256 pbtReward = (block.number - lastRewardBlock) * pbtPerBlock;
+        
+        uint256 blockToUse = block.number;
+        if(blockToUse > endBlock) {
+            blockToUse = endBlock;
+        }
+        if (blockToUse > lastRewardBlock && denominator != 0) {
+            uint256 pbtReward = (blockToUse - lastRewardBlock) * pbtPerBlock;
             rewardPerShare += (pbtReward * 1e12 / denominator);
         }
         return (user.amount * rewardPerShare / 1e12) - user.rewardDebt;
-    }
-
-    // Admin function to update PBT per block reward
-    function setPbtPerBlock(uint256 newValue) external onlyOwner() {
-        _updateRewards();
-        pbtPerBlock = newValue;
     }
 
     // Deposit PBT tokens
@@ -147,7 +146,6 @@ contract PBTStaking is Ownable {
             return;
         }
         uint256 pbtReward = (blockToUse - _lastRewardBlock) * pbtPerBlock;
-        require(pbt.balanceOf(address(this)) - totalDeposits - pbtForRewards >= pbtReward, "Insufficient PBT tokens for rewards");
         pbtForRewards += pbtReward;
         accPbtPerShare += (pbtReward * 1e12 / denominator);
         lastRewardBlock = blockToUse;
