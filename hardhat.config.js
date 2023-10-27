@@ -20,13 +20,19 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
  */
 module.exports = {
   solidity: "0.8.4",
+  settings: {
+        optimizer: {
+          enabled: true,
+          runs: 200
+        }
+      },
   defaultNetwork: "goerli",
   etherscan: {
     apiKey: "KDDGUNQ7G1MUWFI95NJP8CQ1XR6W4TYN43",
   },
   networks: {
     goerli: {
-      url: `https://ethereum-goerli.publicnode.com`,
+      url: `https://goerli.blockpi.network/v1/rpc/public`,
     },
   },
 };

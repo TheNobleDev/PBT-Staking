@@ -8,12 +8,14 @@ Deploys the contract
 - `IERC20 _pbt` : address of the PBT token
 - `uint256 _pbtPerBlock` : number of PBT to be minted per block (scaled by 10^18)
 - `uint256 _startBlock` : the block to start giving out rewards from (has to be a block in the future)
-
-### setPbtPerBlock
-Update the PBT reward value per block (can also be set to 0)
-- `newValue` : the new reward value
+- `uint256 _totalRewards` : the total number of PBT to give out as rewards
 
 ## Function Descriptions (callable by anyone)
+
+### pendingPbt
+A read-only function to view the pending rewards of any user
+- `_user` : the address of user whose pending rewards are to be viewed
+
 
 ### deposit
 Deposit PBT tokens to PBTStaking contract
@@ -37,12 +39,13 @@ This function can be called by a user to withdraw their principal if there are n
 ## Entire Workflow
 
 1. Owner(you) deploys the contract with the constructor arguments mentioned above
-2. Owner(you) sends PBT tokens that you want to be distributed over the next 1 year (or any time frame) to the contract address. 
-3. User approves the contract to spend their LP tokens
+2. Owner(you) sends '_totalRewards' PBT tokens to the contract address. 
+3. User approves the contract to spend their PBT tokens
 4. User calls `deposit` function with the amount of tokens to deposit.
 5. At any time in the future, the user can call the `withdraw` function with same arguments as above to withdraw their tokens and all rewards.
 6. They can also call the `claimRewards` or the `compoundDeposit` functions.
-7. When the owner wishes to stop giving out rewards, call the `setPbtPerBlock(0)` function.
+7. When the contract runs out of '_totalRewards' PBT, it stops giving out rewards.
+
 
 ## Numerical Example
 

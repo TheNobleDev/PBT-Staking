@@ -19,76 +19,44 @@ Whenever a user deposits or withdraws LP tokens (both PB and Uni), Here's what h
 ### Constructor
 Deploys the contract
 - `IERC20 _pbt` : address of the PBT token
+- `IFPMM _lpToken` : address of the LP token
 - `uint256 _pbtPerBlock` : number of PBT to be minted per block (scaled by 10^18)
 - `uint256 _startBlock` : the block to start giving out rewards from (has to be a block in the future)
-
-###  add
-Add a new LP to the contract.
-- `uint256 _allocPoint` : relative ratio of allocation points of rewards to award to this LP
-- `IERC20 _lpToken` : address of the LP token to allow to be staked
-
-### set
-Update the given pool's PBT allocation point
-- `uint256 _pid` : the pool ID of the pool
-- `uint256 _allocPoint` : new relative ratio of allocation points of rewards to award to this LP
+- `uint256 _totalRewards` : the total number of PBT to give out as rewards
 
 
 ## Function Descriptions (callable by anyone)
 
+### pendingPbt
+A read-only function to view the pending rewards of any user
+- `_user` : the address of user whose pending rewards are to be viewed
+
 ### deposit
 Deposit LP tokens to PBTStaking for PBT allocation
-- `uint256 _pid` : the pool ID of the pool
 - `uint256 _amount` : the number of LP tokens to deposit
 
 ### withdraw
 Withdraw LP tokens (and rewards) from PBTStaking
-- `uint256 _pid` : the pool ID of the pool
 - `uint256 _amount` : the number of LP tokens to withdraw
+
+### emergencyWithdraw
+This function can be called by a user to withdraw their principal if there are not enough PBT tokens in the contract to pay out rewards.
 
 
 ## Entire Workflow
 
 1. Owner(you) deploys the contract with the constructor arguments mentioned above
-2. Owner(you) sends PBT tokens that you want to be distributed over the next 1 year (or any time frame) to the contract address. The contract will continue to function till the time it has sufficient PBT tokens to distribute.
-Approximate time calculation is as follows:
-  Time contract will function (in seconds) = (tokens sent / tokens per block) * 13
-3. Owner(you) can add 1 or more pools using the `add` function above.
-  2.1. Suppose you want to add 2 LP with addresses `0xabcd` and `0x1234` and equal weight, you will call the add function twice as follows:
-    `add(100, 0xabcd)`
-    `add(100, 0x1234)`
-  Each distinct pool generates a sequential pid.
+2. Owner(you) sends '_totalRewards' PBT tokens to the contract address. 
 3. User approves the contract to spend their LP tokens
-4. User calls `deposit` function with the pid of pool and amount of tokens to deposit.
-5. At any time in the future, the user can call the `withdraw` function with same arguments as above to withdraw their tokens.
+4. User calls `deposit` function with the amount of tokens to deposit.
+5. At any time in the future, the user can call the `withdraw` function to withdraw their tokens (partially or wholely).
 6. They can also call the `deposit` function with amount=0, to only claim their rewards, and not deposit/withdraw any principal tokens.
-3. Owner(you) can retire a pool by calling the `set` function with the pool's pid, and `_allocPoint` = 0.
 
 
 ## Numerical Example
 
-```
-10 allocPoints
-pool's  = 10
-total = 10
-
-10 allocPoints
-pool's  = 10
-total = 20
-
-10 allocPoints (16%)
-pool's  = 10
-total = 30
-
-30 allocPoints (50%)
-pool's  = 30
-total = 60
-```
-
 ````
-total : 100 PBT per block
-1 pool gets 25 PBT per block
-total of 4 pools (equal)
-
+total : 25 PBT per block
 We're calculating for 100 blocks
 
 Pool gets 2500 PBT in total till now
@@ -104,7 +72,7 @@ uint256 multiplier = block.number.sub(pool.lastRewardBlock);
 uint256 pbtReward = multiplier.mul(pbtPerBlock).mul(pool.allocPoint).div(totalAllocPoint);
           = 100 * 100 * 10 / 40
           = 2500
-          = total PBT rewards for 'this' pool
+          = total PBT rewards
 
 pool.accPbtPerShare = pool.accPbtPerShare.add(pbtReward.mul(1e12).div(lpSupply));
           = 0 + (2500/500)
